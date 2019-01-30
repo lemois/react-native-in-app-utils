@@ -63,6 +63,27 @@ RCT_EXPORT_METHOD(finishTransaction:(NSString *)transactionIdentifier
   reject(@"E_TRANSACTION_NOT_FOUND", @"Transaction not found", nil);
 }
 
+RCT_EXPORT_METHOD(canPurchaseProduct:(NSString *)productIdentifier
+                            resolve:(RCTPromiseResolveBlock)resolve
+                             reject:(RCTPromiseRejectBlock)reject)
+{
+  NSArray *transactions = [[SKPaymentQueue defaultQueue] transactions];
+  for (int i = 0; i < transactions.count; i++) {
+    SKPaymentTransaction* t = transactions[i];
+    if (
+      (
+        t.transactionState == SKPaymentTransactionStatePurchasing ||
+        t.transactionState == SKPaymentTransactionStatePurchased
+      ) &&
+      [productIdentifier isEqualToString:t.payment.productIdentifier]
+    ) {
+      resolve(@"false");
+      return;
+    }
+  }
+  resolve(@"true");
+}
+
 NSString *const TRANSACTION_UPDATED_EVENT_NAME = @"transactionUpdated";
 
 - (NSArray<NSString *> *)supportedEvents
